@@ -1,4 +1,5 @@
 import { SIM_NOW, assets, findings, iavms } from '../data/mockData.js'
+import usePersistentState from '../hooks/usePersistentState.js'
 import { Card, StatTile } from './ui.jsx'
 
 // IAVM compliance view. Navy vulnerability work is deadline-driven:
@@ -21,8 +22,13 @@ function deadlineInfo(iavm) {
 }
 
 export default function IavmTracker() {
+  // IDs you've acknowledged in this browser (practicing the "ack in
+  // VRAM first" step). Merged with the acknowledged flags in mock data.
+  const [ackedIds, setAckedIds] = usePersistentState('sim-iavm-ack', [])
+  const isAcked = (i) => i.acknowledged || ackedIds.includes(i.id)
+
   const overdue = iavms.filter((i) => new Date(i.due + 'T23:59:59') < SIM_NOW).length
-  const unacked = iavms.filter((i) => !i.acknowledged).length
+  const unacked = iavms.filter((i) => !isAcked(i)).length
 
   return (
     <div className="space-y-4">
@@ -52,10 +58,17 @@ export default function IavmTracker() {
                     <span className="font-mono text-xs bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-sky-300">
                       {iavm.id}
                     </span>
-                    {!iavm.acknowledged && (
-                      <span className="text-xs bg-amber-900/60 text-amber-300 border border-amber-800 rounded px-1.5 py-0.5">
-                        Needs VRAM Acknowledgement
+                    {isAcked(iavm) ? (
+                      <span className="text-xs bg-green-900/60 text-green-300 border border-green-800 rounded px-1.5 py-0.5">
+                        Acknowledged
                       </span>
+                    ) : (
+                      <button
+                        onClick={() => setAckedIds((ids) => [...ids, iavm.id])}
+                        className="text-xs bg-amber-900/60 text-amber-300 border border-amber-800 rounded px-1.5 py-0.5 hover:bg-amber-800/60"
+                      >
+                        Needs VRAM Acknowledgement — click to acknowledge
+                      </button>
                     )}
                   </div>
                   <div className="text-sm font-medium text-slate-200 mt-1.5">{iavm.title}</div>

@@ -27,31 +27,49 @@ const views = [
 export default function App() {
   const [view, setView] = useState('acas')
 
+  // Wipes saved practice work (tickets, POA&Ms, checklist) and reloads
+  // so the simulator returns to its built-in defaults.
+  const resetPracticeData = () => {
+    if (!window.confirm('Reset all practice work (tickets, POA&Ms, checklist) to defaults?')) return
+    ;['sim-tickets', 'sim-poams', 'sim-iavm-ack', 'fieldguide-checklist'].forEach((k) =>
+      window.localStorage.removeItem(k),
+    )
+    window.location.reload()
+  }
+
   return (
-    <div className="min-h-screen flex">
+    // Stacks vertically on phones (nav becomes a scrollable strip on
+    // top); side-by-side layout from the md breakpoint up.
+    <div className="min-h-screen flex flex-col md:flex-row">
       {/* Sidebar navigation */}
-      <aside className="w-64 shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col">
+      <aside className="w-full md:w-64 shrink-0 bg-slate-900 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col">
         <div className="px-4 py-4 border-b border-slate-800">
           <div className="text-sm font-bold text-slate-100">ACAS / ESS SME Simulator</div>
           <div className="text-xs text-slate-500 mt-1">Training sandbox — all data is mock</div>
         </div>
-        <nav className="p-2 space-y-1">
+        <nav className="p-2 flex md:flex-col gap-1 overflow-x-auto md:overflow-x-visible">
           {views.map((v) => (
             <button
               key={v.id}
               onClick={() => setView(v.id)}
-              className={`w-full text-left px-3 py-2 rounded text-sm flex items-center gap-2 transition-colors ${
+              className={`shrink-0 md:w-full text-left px-3 py-2 rounded text-sm flex items-center gap-2 transition-colors ${
                 view === v.id
                   ? 'bg-sky-900/60 text-sky-200 font-semibold'
                   : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
               }`}
             >
               <span>{v.icon}</span>
-              <span>{v.label}</span>
+              <span className="whitespace-nowrap">{v.label}</span>
             </button>
           ))}
         </nav>
-        <div className="mt-auto p-4 text-xs text-slate-600 border-t border-slate-800">
+        <div className="mt-auto p-4 text-xs text-slate-600 border-t border-slate-800 hidden md:block">
+          <button
+            onClick={resetPracticeData}
+            className="mb-3 w-full text-left text-slate-500 hover:text-slate-300 border border-slate-800 rounded px-2 py-1.5"
+          >
+            ↺ Reset practice data
+          </button>
           Simulated environment. No real systems, CVEs are illustrative.
         </div>
       </aside>
