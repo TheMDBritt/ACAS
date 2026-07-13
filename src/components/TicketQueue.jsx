@@ -1,15 +1,11 @@
 import { useState } from 'react'
-import { initialTickets, slaHoursByPriority } from '../data/mockData.js'
+import { SIM_NOW, initialTickets, slaHoursByPriority } from '../data/mockData.js'
+import usePersistentState from '../hooks/usePersistentState.js'
 import { Card, StatTile, StatusBadge } from './ui.jsx'
 
 // ITIL-style incident queue: priority levels (P1–P4), SLA timers,
 // escalation flags, assignment, and open/in-progress/closed status.
-// Status and assignment are interactive (React state, resets on refresh).
-
-// The mock data uses fixed timestamps, so SLA math runs against a fixed
-// "simulated now" — this keeps timers realistic no matter when you open
-// the app. Swap in `new Date()` if you ever use live data.
-const SIM_NOW = new Date('2026-07-13T07:00:00')
+// Your changes persist in the browser via usePersistentState.
 
 const priorityStyles = {
   P1: 'bg-purple-600 text-white',
@@ -38,7 +34,8 @@ function slaInfo(ticket) {
 const ticketStatuses = ['Open', 'In Progress', 'Closed']
 
 export default function TicketQueue() {
-  const [tickets, setTickets] = useState(initialTickets)
+  // Persisted in the browser so worked tickets survive a refresh.
+  const [tickets, setTickets] = usePersistentState('sim-tickets', initialTickets)
   const [statusFilter, setStatusFilter] = useState('All')
 
   const update = (id, patch) =>

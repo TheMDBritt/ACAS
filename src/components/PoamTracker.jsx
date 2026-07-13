@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { assets, findings, initialPoams } from '../data/mockData.js'
+import usePersistentState from '../hooks/usePersistentState.js'
 import { Card, SeverityBadge, StatTile, StatusBadge } from './ui.jsx'
 
 // POA&M (Plan of Action & Milestones) tracker. Each entry ties a scan
@@ -9,7 +10,8 @@ import { Card, SeverityBadge, StatTile, StatusBadge } from './ui.jsx'
 const poamStatuses = ['In Progress', 'Remediated', 'Accepted Risk']
 
 export default function PoamTracker() {
-  const [poams, setPoams] = useState(initialPoams)
+  // Persisted in the browser so your practice work survives a refresh.
+  const [poams, setPoams] = usePersistentState('sim-poams', initialPoams)
   const [statusFilter, setStatusFilter] = useState('All')
 
   const setStatus = (id, status) =>

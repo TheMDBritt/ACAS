@@ -10,11 +10,17 @@ findings are fictional and exist only for practice. There is no backend: everyth
 | Screen | Simulates | What to practice |
 |---|---|---|
 | ACAS / Vulnerability Mgmt | Tenable Security Center asset + scan view | Reading severity/CVSS, filtering by severity and STIG compliance, drilling into a host's findings |
+| Scan Management | SC's scan console | Scan schedules and types, scan zones, credentialed-scan auth failures, failed-scan troubleshooting |
 | Asset Tree | SC's Repository → OU → Asset Group hierarchy | How scan data and assets are organized |
 | ESS / Endpoint Security | McAfee ePO-style system tree | Agent online/offline, versions, last check-in, out-of-date flags |
 | Patch / Software Mgmt | Patch pipeline + feed health | Outdated software per asset, plugin feed history, ACAS roll version tracking |
+| IAVM Compliance | Navy IAVA/IAVB deadline tracking | Mapping IAVMs to plugins and affected hosts, deadlines/overdue status, VRAM acknowledgement flow |
 | POA&M Tracker | RMF/eMASS-style POA&M workflow | Marking findings remediated / in-progress / accepted risk, RMF control mapping |
 | Ticket Queue | ITIL incident management | P1–P4 priorities, SLA timers, escalation, assignment, open→closed workflow |
+| Field Guide | Study material (no scan data) | Daily-routine checklist, acronym glossary, RMF 6-step reference, scenario drills with reveal-answers |
+
+Your practice work on the POA&M tracker, ticket queue, and daily checklist is saved in the
+browser (localStorage), so it survives a refresh. Clear site data to reset the simulator.
 
 ## How the code is organized (plain language)
 

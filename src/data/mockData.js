@@ -136,6 +136,101 @@ export const initialTickets = [
   { id: 'T-2608', title: 'Request: add Lab repo assets to weekly scan schedule', priority: 'P4', status: 'Closed', assignee: 'You (ACAS SME)', requester: 'Lab Lead', category: 'Scan Scheduling', createdAt: '2026-07-07 13:10', escalated: false, notes: 'Added LAB-APP-01 and LAB-WS-01 to Wednesday scan window.' },
 ]
 
+// ---- Simulated clock ----
+// Mock timestamps are fixed, so time math (SLA timers, IAVA deadlines)
+// runs against this fixed "now" to stay realistic whenever you open
+// the app. Swap for `new Date()` if you ever use live data.
+export const SIM_NOW = new Date('2026-07-13T07:00:00')
+
+// ---- Scan management (the core daily ACAS task) ----
+export const scanZones = [
+  { name: 'Zone-Norfolk-Prod', ranges: '10.14.0.0/16', scanner: 'NRFK-NESSUS-01', scannerStatus: 'Online' },
+  { name: 'Zone-Lab', ranges: '10.99.10.0/24', scanner: 'LAB-NESSUS-01', scannerStatus: 'Online' },
+]
+
+export const scanCredentials = [
+  { name: 'SVC-ACAS-WIN (AD service account)', type: 'Windows / SMB-WMI', usedBy: 'Windows credentialed scans', status: 'Auth Failure on 1 host', detail: 'Auth failing on NRFK-SQL-01 — verify password and WMI access (ticket T-2606)', lastVerified: '2026-07-10' },
+  { name: 'svc-acas-ssh (SSH key)', type: 'Linux / SSH', usedBy: 'RHEL credentialed scans', status: 'OK', detail: 'All Linux hosts authenticating', lastVerified: '2026-07-11' },
+]
+
+export const scans = [
+  { id: 'S-01', name: 'Weekly Full Vuln - Windows Servers', type: 'Credentialed Vulnerability', repository: 'NIPR_Shore_Repo', targets: 'Windows Servers group (3 hosts)', schedule: 'Fri 02:00', lastRun: '2026-07-11 02:00', status: 'Completed', note: '1 host had credential auth failure (NRFK-SQL-01)' },
+  { id: 'S-02', name: 'Weekly Full Vuln - Linux Servers', type: 'Credentialed Vulnerability', repository: 'NIPR_Shore_Repo', targets: 'Linux Servers group (2 hosts)', schedule: 'Fri 03:00', lastRun: '2026-07-11 03:00', status: 'Completed', note: null },
+  { id: 'S-03', name: 'Workstation Sweep - Bldg 1425', type: 'Credentialed Vulnerability', repository: 'NIPR_Shore_Repo', targets: 'Admin + Watchfloor Workstations (5 hosts)', schedule: 'Sat 09:00', lastRun: '2026-07-12 09:00', status: 'Completed', note: null },
+  { id: 'S-04', name: 'STIG/SCAP Compliance - All Windows', type: 'SCAP Compliance', repository: 'NIPR_Shore_Repo', targets: 'All Windows assets', schedule: '1st Mon monthly 01:00', lastRun: '2026-07-06 01:00', status: 'Completed', note: 'Feeds the STIG compliance column on the ACAS dashboard' },
+  { id: 'S-05', name: 'Discovery Scan - Norfolk ranges', type: 'Host Discovery', repository: 'NIPR_Shore_Repo', targets: '10.14.0.0/16', schedule: 'Daily 05:00', lastRun: '2026-07-13 05:00', status: 'Running', note: 'Finds new/unmanaged hosts on the network' },
+  { id: 'S-06', name: 'Weekly Vuln - Lab', type: 'Credentialed Vulnerability', repository: 'NIPR_Lab_Repo', targets: 'LAB-APP-01, LAB-WS-01', schedule: 'Wed 16:00', lastRun: '2026-07-08 16:00', status: 'Failed', note: 'Scanner could not reach targets — lab firewall change 7/08. Rescheduled after rule fix.' },
+]
+
+// ---- IAVM compliance (Navy vulnerability directives with deadlines) ----
+// IAVA = alert (act now), IAVB = bulletin (lower risk). Each maps to
+// plugins so you can find affected assets by scanning.
+export const iavms = [
+  { id: 'IAVA 2026-A-0112', title: 'Microsoft Windows Cumulative Update (June 2026)', released: '2026-06-12', due: '2026-07-03', pluginIds: ['193421'], acknowledged: true, notes: 'Overdue on 2 hosts — POA&M-26-014 covers extension request.' },
+  { id: 'IAVA 2026-A-0121', title: 'Microsoft Exchange Server Remote Code Execution', released: '2026-06-27', due: '2026-07-18', pluginIds: ['195102'], acknowledged: true, notes: 'Patch scheduled in 7/18 maintenance window (T-2601).' },
+  { id: 'IAVA 2026-A-0098', title: 'Adobe Acrobat Reader Arbitrary Code Execution', released: '2026-06-24', due: '2026-07-15', pluginIds: ['194233'], acknowledged: true, notes: 'Deployment scheduled (P-07).' },
+  { id: 'IAVB 2026-B-0044', title: 'Google Chrome Multiple Vulnerabilities', released: '2026-06-19', due: '2026-07-24', pluginIds: ['188420'], acknowledged: true, notes: 'One host patched awaiting rescan, one blocked (agent offline).' },
+  { id: 'IAVA 2026-A-0130', title: 'RHEL Kernel Local Privilege Escalation', released: '2026-07-02', due: '2026-07-23', pluginIds: ['196001'], acknowledged: false, notes: 'Not yet acknowledged in VRAM — do this first.' },
+]
+
+// ---- Field guide: study material for the role ----
+export const glossary = [
+  { term: 'ACAS', def: 'Assured Compliance Assessment Solution — the DoD program name for the vulnerability scanning suite (Tenable Security Center + Nessus scanners + agents).' },
+  { term: 'Security Center (SC / Tenable.sc)', def: 'The central console that schedules scans, stores results in repositories, and drives dashboards/reports. What you\'ll live in daily.' },
+  { term: 'Nessus Scanner', def: 'The engine that actually probes hosts. Sites place scanners in scan zones so every network segment is reachable.' },
+  { term: 'Plugin', def: 'A single vulnerability check the scanner runs. Plugins are updated daily via the plugin feed — a stale feed means missed vulnerabilities.' },
+  { term: 'ACAS Roll', def: 'A DISA-released bundle of approved SC/Nessus software versions. Sites must upgrade to each roll within a mandated window and report it.' },
+  { term: 'ESS', def: 'Endpoint Security Solutions — the DoD endpoint protection program (successor branding for HBSS), historically built on McAfee/Trellix ePO.' },
+  { term: 'HBSS', def: 'Host Based Security System — the legacy name for the DoD endpoint security suite. Old hands still say HBSS; it became ESS.' },
+  { term: 'ePO', def: 'ePolicy Orchestrator — the McAfee/Trellix console that manages endpoint agents, policies, and threat events.' },
+  { term: 'STIG', def: 'Security Technical Implementation Guide — DISA\'s hardening checklist per OS/application. SCAP scans check STIG compliance automatically.' },
+  { term: 'SCAP', def: 'Security Content Automation Protocol — machine-readable checklist format used to automate STIG compliance scanning.' },
+  { term: 'CVSS', def: 'Common Vulnerability Scoring System — 0–10 severity score for a vulnerability. 9.0+ is critical.' },
+  { term: 'IAVA / IAVB / IAVM', def: 'Information Assurance Vulnerability Alert/Bulletin — DoD directives requiring remediation of specific vulnerabilities by a deadline. IAVM is the overall program. Miss the deadline → POA&M or risk acceptance.' },
+  { term: 'VRAM', def: 'Vulnerability Remediation Asset Manager — Navy web system where commands acknowledge IAVMs and report compliance.' },
+  { term: 'POA&M', def: 'Plan of Action & Milestones — the formal record of a known weakness, how and when it will be fixed, tracked in eMASS.' },
+  { term: 'eMASS', def: 'Enterprise Mission Assurance Support Service — DoD system of record for RMF packages, controls, and POA&Ms.' },
+  { term: 'RMF', def: 'Risk Management Framework — the 6-step NIST process (Categorize, Select, Implement, Assess, Authorize, Monitor) behind every ATO. Your scanning work is step 6: continuous monitoring.' },
+  { term: 'ATO / AO', def: 'Authority to Operate — formal approval for a system to run, signed by the Authorizing Official (AO), who also signs risk acceptances.' },
+  { term: 'ISSM / ISSO', def: 'Information System Security Manager/Officer — your main cyber chain of command; they own the RMF package you feed scan data into.' },
+  { term: 'Repository', def: 'In Security Center: a partitioned store of scan results. Access and dashboards are scoped per repository.' },
+  { term: 'Scan Zone', def: 'A range of IPs mapped to specific Nessus scanners so SC knows which scanner can reach which network.' },
+  { term: 'Credentialed Scan', def: 'A scan that logs into hosts (service account/SSH key) for accurate results. Auth failures silently degrade results — check them every scan cycle.' },
+  { term: 'CTO', def: 'Cyber Tasking Order — an order (e.g. from fleet cyber command) directing specific defensive actions with reporting deadlines.' },
+]
+
+export const dailyChecklist = [
+  'Verify the SC plugin feed updated overnight (stale feed = scans miss new vulns)',
+  'Review overnight scan results; rerun or troubleshoot failed scans',
+  'Check credentialed-scan auth failures — a host that stopped authenticating gives false-clean results',
+  'Review ESS agents offline > 24h and open tickets for chronic offenders',
+  'Check for newly released IAVAs/plugins affecting your assets; acknowledge in VRAM',
+  'Work the ticket queue in priority order — watch SLA timers, escalate before breach',
+  'Update POA&M milestones for anything you touched',
+  'Confirm yesterday\'s patch deployments with a targeted rescan',
+  'Note anything for the weekly compliance brief (new criticals, overdue IAVAs, offline agents)',
+]
+
+export const rmfSteps = [
+  { step: '1. Categorize', desc: 'Rate the system\'s impact level (confidentiality/integrity/availability).' },
+  { step: '2. Select', desc: 'Pick the NIST 800-53 control baseline that matches the categorization.' },
+  { step: '3. Implement', desc: 'Apply the controls (hardening, STIGs, configs).' },
+  { step: '4. Assess', desc: 'Independent testing that controls actually work.' },
+  { step: '5. Authorize', desc: 'AO reviews residual risk and signs the ATO.' },
+  { step: '6. Monitor', desc: 'Continuous monitoring — ACAS scans, ESS health, POA&M upkeep. This is where YOUR job lives.' },
+]
+
+export const scenarios = [
+  { id: 'SC-1', situation: 'Overnight credentialed scan shows authentication failures on 12 Windows hosts that scanned clean last week.', answer: 'Don\'t just rerun the scan. Check the scan service account first — expired password or lockout is the usual cause. Verify SMB/WMI reachability (firewall change?), fix the credential in SC, then rerun. Treat "clean" results from a failed-auth scan as invalid.' },
+  { id: 'SC-2', situation: 'A new IAVA drops with a 21-day deadline affecting Exchange. What\'s your play?', answer: 'Acknowledge it in VRAM. Find affected assets by filtering scan results for the IAVA\'s plugins. Coordinate a patch window with the system owner, patch, rescan to prove closure, report compliance. If the deadline can\'t be met, open a POA&M with the ISSM before it goes overdue.' },
+  { id: 'SC-3', situation: 'An ESS agent on a production server has been offline for 7 days.', answer: 'Offline agent = no policy enforcement, no AV updates, stale inventory. Confirm the host is actually up, check the agent service, restart or redeploy the agent, verify check-in. If you can\'t reach it, ticket desktop/server support with an SLA. Watch it after recovery — repeat offenders usually have an underlying cause.' },
+  { id: 'SC-4', situation: 'A critical finding can\'t be patched because a legacy mission application breaks with the update.', answer: 'You never just ignore it. Apply mitigations (isolate the host, restrict access, extra monitoring), document everything in a POA&M, and route a risk acceptance through the ISSM to the AO. The AO — not you — decides to accept the risk, in writing.' },
+  { id: 'SC-5', situation: 'The plugin feed hasn\'t updated in 3 days.', answer: 'Check SC\'s feed status page and logs: common causes are upstream connectivity, expired certificates, disk space, or a proxy change. Retry the feed manually. If it keeps failing, open a ticket with the ACAS help desk — and flag that scan results during the gap may miss newly released checks.' },
+  { id: 'SC-6', situation: 'The CO wants STIG compliance numbers broken out by building for Friday\'s brief.', answer: 'Scope it with asset groups: run/refresh the SCAP compliance scans, build a SC dashboard or report filtered per asset group (one per building/OU), and export. Sanity-check hosts with failed or stale scans first — a host that didn\'t scan isn\'t "compliant", it\'s unknown.' },
+  { id: 'SC-7', situation: 'Discovery scan finds an IP responding on the network that isn\'t in any repository or asset group.', answer: 'Unmanaged host — treat as a finding in itself. Identify it (switchport, DHCP/DNS, owner), get an agent and credentials on it, add it to the right asset group and scan schedule. If nobody claims it, escalate to the ISSM — unknown devices on the network are a security event.' },
+  { id: 'SC-8', situation: 'Your patch fixed the vuln, but the finding still shows on the dashboard two days later.', answer: 'Findings only clear when a new scan proves the fix. Check when the host last scanned; run a targeted rescan. If it still shows: verify the patch actually applied (reboot pending?), and confirm the scan is credentialed — an uncredentialed scan may not see the fix.' },
+]
+
 // ---- Small helpers used by multiple screens ----
 export const severityOrder = ['Critical', 'High', 'Medium', 'Low']
 

@@ -2,8 +2,11 @@ import { useState } from 'react'
 import AcasDashboard from './components/AcasDashboard.jsx'
 import AssetTreeView from './components/AssetTreeView.jsx'
 import EssDashboard from './components/EssDashboard.jsx'
+import FieldGuide from './components/FieldGuide.jsx'
+import IavmTracker from './components/IavmTracker.jsx'
 import PatchManagement from './components/PatchManagement.jsx'
 import PoamTracker from './components/PoamTracker.jsx'
+import ScanManagement from './components/ScanManagement.jsx'
 import TicketQueue from './components/TicketQueue.jsx'
 
 // App.jsx is the "shell": it draws the sidebar and decides which
@@ -11,11 +14,14 @@ import TicketQueue from './components/TicketQueue.jsx'
 // changes it, React re-renders and swaps the main panel.
 const views = [
   { id: 'acas', label: 'ACAS / Vulnerability Mgmt', icon: '🛡️' },
+  { id: 'scans', label: 'Scan Management', icon: '📡' },
   { id: 'tree', label: 'Asset Tree', icon: '🗂️' },
   { id: 'ess', label: 'ESS / Endpoint Security', icon: '🖥️' },
   { id: 'patch', label: 'Patch / Software Mgmt', icon: '📦' },
+  { id: 'iavm', label: 'IAVM Compliance', icon: '📣' },
   { id: 'poam', label: 'POA&M Tracker (RMF)', icon: '📋' },
   { id: 'tickets', label: 'Ticket Queue (ITIL)', icon: '🎫' },
+  { id: 'guide', label: 'Field Guide (Study)', icon: '📖' },
 ]
 
 export default function App() {
@@ -53,11 +59,14 @@ export default function App() {
       {/* Main panel — swaps based on selected view */}
       <main className="flex-1 p-6 overflow-x-auto">
         {view === 'acas' && <AcasDashboard />}
+        {view === 'scans' && <ScanManagement />}
         {view === 'tree' && <AssetTreeView />}
         {view === 'ess' && <EssDashboard />}
         {view === 'patch' && <PatchManagement />}
+        {view === 'iavm' && <IavmTracker />}
         {view === 'poam' && <PoamTracker />}
         {view === 'tickets' && <TicketQueue />}
+        {view === 'guide' && <FieldGuide />}
       </main>
     </div>
   )
